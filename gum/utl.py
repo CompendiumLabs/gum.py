@@ -194,13 +194,13 @@ class Group(Element):
         return '\n'.join([ indented(convert_child(c)) for c in self.children ])
 
 class DataGroup(Element):
-    def __init__(self, *children, tag='Group', **args):
-        unary = len(children) == 0
+    def __init__(self, child=None, tag='Group', **args):
+        unary = child is None
         super().__init__(tag, unary, **args)
-        self.children = children
+        self.child = child
 
     def inner(self):
-        return convert_child(self.children)
+        return convert_child(self.child) if self.child is not None else ''
 
 class RawGroup(Element):
     def __init__(self, *children, tag='Group', **args):
