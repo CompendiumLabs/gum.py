@@ -256,6 +256,10 @@ class GumData:
         data = [ frame[col] for col in frame ]
         return cls(data, index=frame.index)
 
+    @classmethod
+    def from_series(cls, series):
+        return cls([ series ], index=series.index)
+
     def __iter__(self):
         return iter(self._data)
 

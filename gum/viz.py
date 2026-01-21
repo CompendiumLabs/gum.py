@@ -111,7 +111,7 @@ def points(frame, shape=None, **kwargs):
 
     # data plotters
     points = [
-        SymPoints(xvals=data.index, yvals=v, shape=shape, **{'stroke': c, 'fill': c, **point_args})
+        SymPoints(xvals=data.index, yvals=v, shape=shape, **{'color': c, **point_args})
         for v, c in zip(data, cycle(COLORS))
     ]
 
@@ -125,7 +125,12 @@ def bars(series, **kwargs):
 
     # convert to series
     series = ensure_series(series)
+    data = GumData.from_series(series)
+
+    # make bars data
+    values = next(iter(data))
+    bdata = C.zip(data.index, values)
 
     # generate svg code
-    bars = [ Bar(label=k, size=v) for k, v in series.items() ]
-    return BarPlot(*bars, **args)
+    plot = BarPlot(bdata, **args)
+    return Gum(plot, vars=data)
