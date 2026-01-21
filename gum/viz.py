@@ -2,7 +2,7 @@
 
 from itertools import cycle
 
-from .gen import C, GumData, Gum, SymPoints, SymLine, SymSpline, Plot, BarPlot, VBar
+from .gen import C, GumData, Gum, SymPoints, SymLine, SymSpline, Plot, BarPlot, Bar
 from .utl import prefix_split
 
 ##
@@ -122,11 +122,10 @@ def points(frame, shape=None, **kwargs):
 def bars(series, **kwargs):
     # collect arguments
     args = { **DEFAULT_BARS, **kwargs }
-    bar_args, plot_args = prefix_split('bar', args)
 
     # convert to series
     series = ensure_series(series)
 
     # generate svg code
-    bars = [ VBar(label=k, size=v, **bar_args) for k, v in series.items() ]
-    return BarPlot(*bars, **plot_args)
+    bars = [ Bar(label=k, size=v) for k, v in series.items() ]
+    return BarPlot(*bars, **args)
