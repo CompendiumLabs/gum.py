@@ -2,7 +2,7 @@
 
 import os
 import json
-import base64
+import shutil
 import threading
 import subprocess
 
@@ -51,6 +51,10 @@ class GumError(Exception):
 LIB_PATH = os.path.dirname(__file__)
 GUM_PATH = os.path.join(LIB_PATH, 'gum-jsx/gum.js')
 
+# environment variables
+RUN_ENV = 'GUM_JSX_RUNTIME'
+RUN_DEFAULT = 'node'
+
 class GumUnixPipe:
     def __init__(self):
         self.proc = None
@@ -62,8 +66,16 @@ class GumUnixPipe:
         self.close()
 
     def init(self):
+        # get javascript runtime
+        runtime = os.environ.get(RUN_ENV) or RUN_DEFAULT
+        if shutil.which(runtime) is None:
+            raise ValueError(
+                f'"{runtime}" not found in PATH ({RUN_ENV}={os.environ.get(RUN_ENV)})'
+            )
+
+        # start server process
         self.proc = subprocess.Popen(
-            [ 'node', GUM_PATH ],
+            [ runtime, GUM_PATH ],
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

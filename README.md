@@ -8,7 +8,7 @@
 <br/><br/>
 </div>
 
-A Python wrapper for [gum.jsx](https://github.com/CompendiumLabs/gum.jsx), a language for creating visualizations using a React-like JSX dialect that evaluates to SVG. Designed for general graphics, plots, graphs, and network diagrams.
+A Python wrapper for [gum.jsx](https://github.com/CompendiumLabs/gum.jsx), a language for creating visualizations using a React-like JSX dialect that evaluates to SVG. Designed for general graphics, plots, graphs, and network diagrams. Automatically renders in IPython console and Jupyter notebooks.
 
 Head to **[compendiumlabs.ai/gum](https://compendiumlabs.ai/gum)** for a live demo and documentation on the underlying `gum.jsx` library.
 
@@ -18,7 +18,7 @@ Head to **[compendiumlabs.ai/gum](https://compendiumlabs.ai/gum)** for a live de
 pip install gum-jsx
 ```
 
-Requires Node.js to be installed for the gum.js backend.
+Requires `node` to be installed for the `gum.jsx` backend. Set the `GUM_JSX_RUNTIME` environment variable to use a different runtime (e.g. `bun`). You also need `chafa` installed for terminal display.
 
 # Usage
 
@@ -31,8 +31,8 @@ from gum.gen import Plot, SymLine
 
 # create a simple sine wave plot
 plot = Plot(
-    SymLine(fy=C.sin, stroke=C.blue, stroke_width=2),
-    xlim=(0, 2*C.pi), ylim=(-1, 1), grid=True, margin=0.2, aspect=2,
+    SymLine(fy=C.sin, xlim=(0, 2*C.pi), stroke=C.blue, stroke_width=2),
+    ylim=(-1.5, 1.5), grid=True, margin=(0.2, 0.1), aspect=2
 )
 
 # display in terminal (requires chafa)
@@ -71,9 +71,8 @@ Use `C` for constants and `V` for variables:
 
 ```python
 from gum import C, V
-from gum.gen import Plot, SymLine, SymPoints
 
-# C references gum.js constants and functions
+# C references gum.jsx constants and functions
 C.sin, C.cos, C.pi, C.blue, C.red
 
 # build symbolic expressions
@@ -88,51 +87,39 @@ theta = V.theta(np.linspace(0, 2*np.pi, 100))
 Display gum visualizations directly in the terminal using `chafa`. Requires a terminal with image support, such as `ghostty`.
 
 ```bash
-# run a built-in demo
-python -m gum -d plot -s 50
-
 # pipe JSX code
 cat input.jsx | python -m gum
+
+# run a built-in demo
+python -m gum -d plot
 ```
 
 CLI options:
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `-d, --demo <name>` | Run a named demo | - |
 | `-s, --size <size>` | Terminal display size | 50 |
 | `-t, --theme <theme>` | Theme: `light` or `dark` | dark |
+| `-d, --demo <name>` | Run a named demo | - |
 
-Available demos: `plot`, `barplot`, `network`, `symline`, `grid`, `stack`, `text`, and more (see `gum/dem.py`).
-
-# Jupyter Support
-
-`gum.py` automatically renders SVG in IPython console and Jupyter notebooks:
-
-```python
-from gum import Plot, SymLine, C
-
-# this will display inline in Jupyter
-Plot(
-    SymLine(fy=C.sin),
-    xlim=(0, 2*C.pi), ylim=(-1, 1), grid=True,
-)
-```
+Available demos (see `gum/dem.py` for code): gum, element, group, box, stack, grid, points, rect, ellipse, line, shape, spline, text, latex, titleframe, slide, sympoints, symline, symshape, symspline, symfill, graph, plot, axis, barplot, node, edge, network, math, arrays, colors
 
 # Components
 
-gum.py wraps all gum.js components. Key ones include:
+Wraps all `gum.jsx` components. Key ones include:
+
+**Core**: `Element`, `Group`, `Svg`
 
 **Layout**: `Box`, `Frame`, `Stack`, `HStack`, `VStack`, `Grid`, `Points`
 
 **Shapes**: `Rect`, `Ellipse`, `Circle`, `Line`, `Shape`, `Spline`
 
-**Text**: `Text`, `TextFrame`, `Latex`, `Equation`
+**Text**: `Text`, `TextFrame`, `Latex`, `Equation`, `TitleFrame`, `TextStack`, `Slide`
 
-**Plotting**: `Plot`, `Graph`, `Axis`, `HAxis`, `VAxis`, `BarPlot`
+**Plotting**: `Plot`, `Graph`, `Axis`, `HAxis`, `VAxis`, `Bars`, `BarPlot`
 
 **Symbolic**: `SymLine`, `SymPoints`, `SymShape`, `SymSpline`, `SymFill`, `SymField`
 
-**Network**: `Node`, `Edge`, `Network`, `Arrow`
+**Network**: `Node`, `Edge`, `Network`, `Arrow`, `ArrowHead`, `ArrowSpline`
 
-See the [gum.js documentation](https://compendiumlabs.ai/gum/docs) for detailed component reference.
+See the [gum.jsx documentation](https://compendiumlabs.ai/gum/docs) for detailed component reference.

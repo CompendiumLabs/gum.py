@@ -117,6 +117,18 @@ class Equation(RawGroup):
     def __init__(self, *children, **kwargs):
         super().__init__(*children, tag='Equation', **kwargs)
 
+class TextStack(Group):
+    def __init__(self, *children, **args):
+        super().__init__(*children, tag='TextStack', **args)
+
+class TitleFrame(Group):
+    def __init__(self, *children, **args):
+        super().__init__(*children, tag='TitleFrame', **args)
+
+class Slide(Group):
+    def __init__(self, *children, **args):
+        super().__init__(*children, tag='Slide', **args)
+
 ## data elements
 
 class SymPoints(Group):
@@ -181,6 +193,10 @@ class HBar(Element):
     def __init__(self, **kwargs):
         super().__init__('HBar', True, **kwargs)
 
+class Bars(Group):
+    def __init__(self, *children, **kwargs):
+        super().__init__(*children, tag='Bars', **kwargs)
+
 class BarPlot(Group):
     def __init__(self, *children, **args):
         super().__init__(*children, tag='BarPlot', **args)
@@ -212,16 +228,6 @@ class Edge(Element):
 class Network(Group):
     def __init__(self, *children, **kwargs):
         super().__init__(*children, tag='Network', **kwargs)
-
-## container elements
-
-class TitleFrame(Group):
-    def __init__(self, *children, **args):
-        super().__init__(*children, tag='TitleFrame', **args)
-
-class Slide(Group):
-    def __init__(self, *children, **args):
-        super().__init__(*children, tag='Slide', **args)
 
 ##
 ## dataframe notion
