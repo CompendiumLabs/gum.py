@@ -1,0 +1,12 @@
+{
+  "name": "gum.py",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "gum-jsx": "^1.3.0"
+  },
+  "overrides": {
+    "mathjax": "0.0.0",
+    "@mathjax/src": "0.0.0"
+  }
+}

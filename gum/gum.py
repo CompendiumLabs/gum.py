@@ -49,7 +49,7 @@ class GumError(Exception):
 ##
 
 LIB_PATH = os.path.dirname(__file__)
-GUM_PATH = os.path.join(LIB_PATH, 'gum-jsx/gum.js')
+GUM_PATH = os.path.join(LIB_PATH, 'js/pipe.js')
 
 # environment variables
 RUN_ENV = 'GUM_JSX_RUNTIME'
@@ -133,8 +133,8 @@ class GumUnixPipe:
         self.close()
         self.init()
 
-    def evaluate(self, code, pixels=None, **kwargs):
-        return self.post(code=code, size=pixels, **kwargs)
+    def evaluate(self, code, **kwargs):
+        return self.post(code=code, **kwargs)
 
 ##
 ## server instance
@@ -149,12 +149,12 @@ def restart():
 def set_debug(debug=True):
     server.debug = debug
 
-def evaluate(code, pixels=500, **kwargs):
-    return server.evaluate(str(code), pixels=pixels, **kwargs)
+def evaluate(code, size=(1000, 750), **kwargs):
+    return server.evaluate(str(code), size=size, **kwargs)
 
-def display(code, size='80x25', theme='dark', format=None, **kwargs):
-    data = evaluate(str(code), theme=theme, **kwargs).encode()
-    chafa(data, size=size, format=format)
+def display(code, theme='dark', **kwargs):
+    data = evaluate(code, theme=theme, **kwargs)
+    print(data)
 
 def display_file(path, **kwargs):
     code = readtext(path)

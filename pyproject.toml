@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gum-jsx"
-version = "0.4"
+version = "0.5"
 description = "Python wrapper for gum.jsx, a language for creating vector graphics"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -21,7 +21,5 @@ packages = ["gum"]
 
 [tool.setuptools.package-data]
 gum = [
-    "gum-jsx/gum.js",
-    "gum-jsx/fonts/IBMPlexSans-Variable.ttf",
-    "gum-jsx/fonts/IBMPlexMono-Regular.ttf",
+    "js/**",
 ]

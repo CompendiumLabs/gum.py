@@ -3,8 +3,9 @@
 import readline from 'readline'
 import { stdout } from 'process'
 
-import { ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/error'
-import { evaluateGum } from 'gum-jsx/eval'
+import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
+import { rasterizeSvg } from 'gum-jsx/render'
+import { formatImage } from 'gum-jsx/term'
 
 function parseError(e) {
     const { message } = e
@@ -18,16 +19,24 @@ function parseError(e) {
     return { error: 'PARSE', message }
 }
 
+function formatResult(code, { format, size, theme, width, height }) {
+    const elem = evaluateGum(code, { size, theme })
+    const svg = elem.svg()
+    if (format == 'svg') return svg
+    const dat = rasterizeSvg(svg, { size: elem.size, width, height })
+    if (format == 'png') return dat
+    return formatImage(dat)
+}
+
 // create readline interface
 const rl = readline.createInterface({ input: process.stdin })
 
 // handle lines from stdin
 rl.on('line', async (line) => {
-    const { code, ...args } = JSON.parse(line)
     let message = null
     try {
-        const elem = evaluateGum(code, args)
-        const result = elem.svg()
+        const { code, ...opts } = JSON.parse(line)
+        const result = formatResult(code, opts)
         message = { ok: true, result }
     } catch (e) {
         const result = parseError(e)
