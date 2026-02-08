@@ -7,28 +7,6 @@ import threading
 import subprocess
 
 ##
-## chafa interface
-##
-
-def snake_case(s):
-    return s.replace('_', '-')
-
-def readtext(path):
-    with open(path, 'r') as fid:
-        return fid.read()
-
-def readbin(path):
-    with open(path, 'rb') as fid:
-        return fid.read()
-
-def chafa(data, **kwargs):
-    data = readbin(data) if isinstance(data, str) else data
-    sargs = sum([
-        [ f'--{snake_case(k)}', f'{v}' ] for k, v in kwargs.items() if v is not None
-    ], [])
-    subprocess.run([ 'chafa', *sargs, '-' ], input=data, stderr=subprocess.DEVNULL)
-
-##
 ## error handling
 ##
 
@@ -155,6 +133,10 @@ def evaluate(code, size=(1000, 750), **kwargs):
 def display(code, theme='dark', **kwargs):
     data = evaluate(code, theme=theme, **kwargs)
     print(data)
+
+def readtext(path):
+    with open(path, 'r') as fid:
+        return fid.read()
 
 def display_file(path, **kwargs):
     code = readtext(path)

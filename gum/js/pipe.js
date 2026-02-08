@@ -4,8 +4,7 @@ import readline from 'readline'
 import { stdout } from 'process'
 
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
-import { rasterizeSvg } from 'gum-jsx/render'
-import { formatImage } from 'gum-jsx/term'
+import { rasterizeSvg, formatImage } from 'gum-jsx/render'
 
 function parseError(e) {
     const { message } = e

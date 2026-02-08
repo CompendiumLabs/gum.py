@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-`gum.py` is a Python wrapper for the `gum.js` visualization library. It allows you to programmatically generate JSX code from Python, which is then evaluated by a Node.js subprocess running `gum.js` to produce SVG or PNG output. The library supports terminal display via `chafa` and Jupyter notebook rendering.
+`gum.py` is a Python wrapper for the `gum.js` visualization library. It allows you to programmatically generate JSX code from Python, which is then evaluated by a Node.js subprocess running `gum.js` to produce SVG or PNG output. The library supports terminal display (kitty image protocol) and Jupyter notebook rendering.
 
 See `../gum.js/CLAUDE.md` for details on the underlying gum.js library and its component system.
 

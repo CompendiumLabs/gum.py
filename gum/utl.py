@@ -4,7 +4,7 @@ import json
 import inspect
 from collections import defaultdict
 
-from .gum import evaluate, display, snake_case
+from .gum import evaluate, display
 
 ##
 ## mixins
@@ -213,6 +213,9 @@ class RawGroup(Element):
 ##
 ## converters
 ##
+
+def snake_case(s):
+    return s.replace('_', '-')
 
 def stringify(value):
     # convert functions to Functions

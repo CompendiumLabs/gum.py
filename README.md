@@ -18,7 +18,7 @@ Head to **[compendiumlabs.ai/gum](https://compendiumlabs.ai/gum)** for a live de
 pip install gum-jsx
 ```
 
-Requires `node` to be installed for the `gum.jsx` backend. Set the `GUM_JSX_RUNTIME` environment variable to use a different runtime (e.g. `bun`). You also need `chafa` installed for terminal display.
+Requires `node` to be installed for the `gum.jsx` backend. Set the `GUM_JSX_RUNTIME` environment variable to use a different runtime (e.g. `bun`).
 
 # Usage
 
@@ -35,7 +35,7 @@ plot = Plot(
     ylim=(-1.5, 1.5), grid=True, margin=(0.2, 0.1), aspect=2
 )
 
-# display in terminal (requires chafa)
+# display in terminal
 gum.display(plot) # or just `plot` if you're in IPython or Jupyter
 
 # or get the SVG string
@@ -84,7 +84,7 @@ theta = V.theta(np.linspace(0, 2*np.pi, 100))
 
 # CLI
 
-Display gum visualizations directly in the terminal using `chafa`. Requires a terminal with image support, such as `ghostty`.
+Display gum visualizations directly in the terminal. Requires a terminal with kitty image support, such as `kitty` or `ghostty`.
 
 ```bash
 # pipe JSX code

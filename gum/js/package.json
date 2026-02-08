@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "gum-jsx": "^1.3.0"
+    "gum-jsx": "link:gum-jsx"
   },
   "overrides": {
     "mathjax": "0.0.0",

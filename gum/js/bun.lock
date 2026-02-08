@@ -1,0 +1,19 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 0,
+  "workspaces": {
+    "": {
+      "name": "gum.py",
+      "dependencies": {
+        "gum-jsx": "link:gum-jsx",
+      },
+    },
+  },
+  "overrides": {
+    "@mathjax/src": "0.0.0",
+    "mathjax": "0.0.0",
+  },
+  "packages": {
+    "gum-jsx": ["gum-jsx@link:gum-jsx", { "bin": { "gum-cli": "./scripts/cli.js", "gum-mcp": "./scripts/mcp.js" } }],
+  }
+}
