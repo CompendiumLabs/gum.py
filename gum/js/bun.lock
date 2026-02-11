@@ -5,7 +5,9 @@
     "": {
       "name": "gum.py",
       "dependencies": {
+        "@types/node": "^25.2.3",
         "gum-jsx": "link:gum-jsx",
+        "typescript": "^5.9.3",
       },
     },
   },
@@ -14,6 +16,12 @@
     "mathjax": "0.0.0",
   },
   "packages": {
-    "gum-jsx": ["gum-jsx@link:gum-jsx", { "bin": { "gum-cli": "./scripts/cli.js", "gum-mcp": "./scripts/mcp.js" } }],
+    "@types/node": ["@types/node@25.2.3", "", { "dependencies": { "undici-types": "~7.16.0" } }, "sha512-m0jEgYlYz+mDJZ2+F4v8D1AyQb+QzsNqRuI7xg1VQX/KlKS0qT9r1Mo16yo5F/MtifXFgaofIFsdFMox2SxIbQ=="],
+
+    "gum-jsx": ["gum-jsx@link:gum-jsx", { "bin": { "gum-cli": "./scripts/cli.ts", "gum-mcp": "./scripts/mcp.ts" } }],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "undici-types": ["undici-types@7.16.0", "", {}, "sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw=="],
   }
 }

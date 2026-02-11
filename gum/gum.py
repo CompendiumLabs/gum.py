@@ -31,7 +31,7 @@ GUM_PATH = os.path.join(LIB_PATH, 'js/pipe.js')
 
 # environment variables
 RUN_ENV = 'GUM_JSX_RUNTIME'
-RUN_DEFAULT = 'node'
+RUN_DEFAULT = 'bun'
 
 class GumUnixPipe:
     def __init__(self):
