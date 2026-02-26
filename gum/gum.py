@@ -27,7 +27,7 @@ class GumError(Exception):
 ##
 
 LIB_PATH = os.path.dirname(__file__)
-GUM_PATH = os.path.join(LIB_PATH, 'js/pipe.js')
+GUM_PATH = os.path.join(LIB_PATH, 'js/pipe.ts')
 
 # environment variables
 RUN_ENV = 'GUM_JSX_RUNTIME'
@@ -36,7 +36,7 @@ RUN_DEFAULT = 'bun'
 class GumUnixPipe:
     def __init__(self):
         self.proc = None
-        self.debug = False
+        self.debug = True
         self._pump_thread = None
         self.init()
 
@@ -77,6 +77,10 @@ class GumUnixPipe:
         if self.proc is None:
             self.init()
 
+        # check if stdin is closed
+        if self.proc.poll() is not None:
+            raise ValueError('[gum server] server exited')
+
         # send request
         request1 = { k: v for k, v in request.items() if v is not None }
         self.proc.stdin.write(json.dumps(request1) + '\n')
@@ -111,8 +115,14 @@ class GumUnixPipe:
         self.close()
         self.init()
 
-    def evaluate(self, code, **kwargs):
-        return self.post(code=code, **kwargs)
+    def jsx(self, jsx, **kwargs):
+        return self.post(input_format='jsx', data=jsx, **kwargs)
+
+    def svg(self, svg, **kwargs):
+        return self.post(input_format='svg', data=svg, **kwargs)
+
+    def png(self, png, **kwargs):
+        return self.post(input_format='png', data=png, **kwargs)
 
 ##
 ## server instance
@@ -127,11 +137,19 @@ def restart():
 def set_debug(debug=True):
     server.debug = debug
 
-def evaluate(code, size=(1000, 750), **kwargs):
-    return server.evaluate(str(code), size=size, **kwargs)
+def evaluate(jsx, size=(1000, 750), **kwargs):
+    return server.jsx(str(jsx), size=size, **kwargs)
 
-def display(code, theme='dark', **kwargs):
-    data = evaluate(code, theme=theme, **kwargs)
+def display(jsx, theme='dark', **kwargs):
+    data = evaluate(jsx, theme=theme, **kwargs)
+    print(data)
+
+def display_svg(svg, **kwargs):
+    data = server.svg(svg, **kwargs)
+    print(data)
+
+def display_png(png, **kwargs):
+    data = server.png(png, **kwargs)
     print(data)
 
 def readtext(path):
