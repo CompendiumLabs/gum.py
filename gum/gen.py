@@ -57,7 +57,7 @@ class Grid(Group):
     def __init__(self, *children, **args):
         super().__init__(*children, tag='Grid', **args)
 
-class Points(DataGroup):
+class Points(Group):
     def __init__(self, *children, **kwargs):
         super().__init__(*children, tag='Points', **kwargs)
 

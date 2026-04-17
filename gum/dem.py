@@ -29,13 +29,13 @@ def demo_gum():
     )
 
 def demo_element():
-    Tri = lambda pos0, pos1, pos2, **attr: G.Shape(pos0, pos1, pos2, **attr)
+    Tri = lambda pos0, pos1, pos2, **attr: G.Shape(points=[pos0, pos1, pos2], **attr)
     return Tri((0.5, 0.1), (0.9, 0.9), (0.1, 0.9), fill=GRAY)
 
 def demo_group():
     return G.Group(
-        G.Rect(pos=(0.3, 0.3), rad=0.1, spin=15),
-        G.Ellipse(pos=(0.7, 0.7), rad=0.1),
+        G.Rect(pos=(0.3, 0.3), size=0.2, spin=15),
+        G.Ellipse(pos=(0.7, 0.7), size=0.2),
     )
 
 ## layout elements
@@ -50,11 +50,10 @@ def demo_box():
 
 def demo_stack():
     return G.VStack(
-        G.Rect(rounded=True, fill=C.blue),
+        G.Rect(rounded=True, aspect=2, fill=C.blue),
         G.HStack(
             G.Square(rounded=True, fill=C.red),
             G.Square(rounded=True, fill=C.green),
-            stack_size=0.5,
             spacing=True,
         ),
         spacing=True,
@@ -66,13 +65,12 @@ def demo_grid():
             *[
                 G.Frame(
                     G.Group(
-                        G.Arrow(direc=0, tail=1, pos=(1, 0.5), rad=0.5),
+                        G.Arrow(points=[(0, 0.5), (1, 0.5)], arrow_size=0.4),
                         aspect=1,
                         spin=th,
                     ),
                     padding=True,
                     rounded=True,
-                    fill=True,
                 )
                 for th in linspace(0, 360, 10)[:9]
             ],
@@ -86,9 +84,9 @@ def demo_grid():
 def demo_points():
     siner = lambda a: (lambda x: C.sin(a*x))
     return G.Plot(
-        G.Points((0, 0.5), (0.5, 0), (-0.5, 0), (0, -0.5), size=0.02),
-        G.Rect(pos=(0.5, 0.5), rad=0.1),
-        G.Circle(pos=(-0.5, -0.5), rad=0.1),
+        G.Points(points=[(0, 0.5), (0.5, 0), (-0.5, 0), (0, -0.5)], point_size=0.04),
+        G.Rect(pos=(0.5, 0.5), size=0.2),
+        G.Circle(pos=(-0.5, -0.5), size=0.2),
         *[G.SymLine(fy=siner(a)) for a in (0.5, 0.9, 1.5)],
         xlim=(-1, 1),
         ylim=(-1, 1),
@@ -103,24 +101,24 @@ def demo_points():
 ## shape elements
 
 def demo_rect():
-    return G.Rect(pos=(0.25, 0.5), rad=(0.1, 0.2))
+    return G.Rect(pos=(0.25, 0.5), size=(0.2, 0.4))
 
 def demo_ellipse():
     return G.Group(
-        G.Ellipse(pos=(0.3, 0.2), rad=(0.2, 0.1)),
-        G.Ellipse(pos=(0.6, 0.6), rad=(0.2, 0.25)),
+        G.Ellipse(pos=(0.3, 0.2), size=(0.4, 0.2)),
+        G.Ellipse(pos=(0.6, 0.6), size=(0.4, 0.5)),
     )
 
 def demo_line():
     return G.Group(
-        G.Line((0.2, 0.2), (0.8, 0.8), stroke=C.blue),
-        G.Line((0.3, 0.3), (0.3, 0.7), (0.7, 0.7), (0.7, 0.3), stroke=C.red),
+        G.Line(points=[(0.2, 0.2), (0.8, 0.8)], stroke=C.blue),
+        G.Line(points=[(0.3, 0.3), (0.3, 0.7), (0.7, 0.7), (0.7, 0.3)], stroke=C.red),
     )
 
 def demo_shape():
     return G.Group(
-        G.Shape((0.5, 0.2), (0.8, 0.8), (0.2, 0.8), fill=C.blue, stroke=C.none),
-        G.Shape((0.3, 0.3), (0.3, 0.7), (0.7, 0.7), (0.7, 0.3), fill=C.green, stroke=C.none, opacity=0.5),
+        G.Shape(points=[(0.5, 0.2), (0.8, 0.8), (0.2, 0.8)], fill=C.blue, stroke=C.none),
+        G.Shape(points=[(0.3, 0.3), (0.3, 0.7), (0.7, 0.7), (0.7, 0.3)], fill=C.green, stroke=C.none, opacity=0.5),
     )
 
 def demo_spline():
@@ -128,9 +126,9 @@ def demo_spline():
         (0.25, 0.25), (0.75, 0.25), (0.75, 0.75), (0.25, 0.75), (0.50, 0.50)
     ]
     return G.Frame(
-        G.Spline(*points, closed=True, stroke=C.blue, fill=GRAY),
-        G.Shape(*points, stroke=C.red),
-        G.Points(*points, size=0.0075),
+        G.Spline(points=points, closed=True, stroke=C.blue, fill=GRAY),
+        G.Shape(points=points, stroke=C.red),
+        G.Points(points=points, size=0.0075),
         rounded=True,
         margin=True,
     )
@@ -144,14 +142,6 @@ def demo_text():
         G.Text(' other elements together.'),
         rounded=True,
         wrap=10,
-    )
-
-# NOTE: this doesn't work yet
-def demo_latex():
-    return G.VStack(
-        G.TextFrame(G.Equation('\\int_0^{\\infty} \\exp(-x^2) dx = \\sqrt{\\pi}')),
-        G.TextFrame(G.Equation('\\sin^2(\\theta) + \\cos^2(\\theta) = 1')),
-        spacing=True,
     )
 
 def demo_titleframe():
@@ -193,16 +183,24 @@ def demo_slide():
         title='The Art of the Sine Wave',
     )
 
+## math elements
+
+def demo_latex():
+    return G.VStack(
+        G.TextFrame(G.Latex('\\int_0^{\\infty} \\exp(-x^2) dx = \\sqrt{\\pi}')),
+        G.TextFrame(G.Latex('\\sin^2(\\theta) + \\cos^2(\\theta) = 1')),
+        spacing=True,
+    )
+
 ## symbolic elements
 
 def demo_sympoints():
     pill = lambda x, y: G.Rect(fill=C.white, rounded=0.3, aspect=2, spin=-C.r2d*C.atan(C.cos(x)))
     return G.Plot(
         G.SymLine(fy=C.sin, stroke=C.blue, stroke_width=2),
-        G.SymPoints(fy=C.sin, size=0.125, shape=pill, N=11),
+        G.SymPoints(fy=C.sin, point_size=0.25, point_shape=pill, N=11),
         xlim=(0, 2*C.pi),
         ylim=(-1.5, 1.5),
-        fill=GRAY,
         grid=True,
         margin=0.25,
         aspect='auto',
@@ -238,7 +236,7 @@ def demo_symspline():
     return G.Plot(
         G.SymLine(fy=decay, N=200, opacity=0.25),
         G.SymSpline(fy=decay, N=10, stroke=C.blue, stroke_width=2),
-        G.SymPoints(fy=decay, N=10, size=0.05, fill=C.red),
+        G.SymPoints(fy=decay, N=10, point_size=0.1, fill=C.red),
         xlim=(0, 2*C.pi),
         ylim=(-1, 1),
         aspect=C.phi,
@@ -261,7 +259,13 @@ def demo_symfill():
 def demo_graph():
     square = lambda x, y: G.Square(rounded=True, spin=C.r2d*x)
     return G.Graph(
-        G.SymPoints(fy=C.sin, xlim=(0, 2*C.pi), size=0.5, shape=square, N=150),
+        G.SymPoints(
+            fy=C.sin,
+            xlim=(0, 2*C.pi),
+            point_size=1,
+            point_shape=square,
+            N=100,
+        ),
         ylim=(-1.5, 1.5),
         padding=0.2,
         aspect=2,
@@ -298,9 +302,9 @@ def demo_axis():
 
 def demo_barplot():
     return G.BarPlot(
-        G.Bar(label='A', size=3, fill=C.red),
-        G.Bar(label='B', size=8.5, fill=C.blue),
-        G.Bar(label='C', size=6.5, fill=C.green),
+        G.Bar(label='A', value=3, fill=C.red),
+        G.Bar(label='B', value=8.5, fill=C.blue),
+        G.Bar(label='C', value=6.5, fill=C.green),
         ylim=[0, 10],
         yticks=6,
         title='Example BarPlot',
@@ -317,7 +321,7 @@ def demo_node():
     return G.Network(
         G.Node('Hello', id='hello', pos=(0.25, 0.25)),
         G.Node('World!', id='world', pos=(0.75, 0.75)),
-        G.Edge(from_='hello', to='world'),
+        G.Edge(start='hello', end='world'),
         node_fill=GRAY,
     )
 
@@ -325,7 +329,7 @@ def demo_edge():
     return G.Network(
         G.Node('Hello', id='hello', pos=(0.25, 0.25)),
         G.Node('World!', id='world', pos=(0.75, 0.75)),
-        G.Edge(from_='hello', to='world', from_fill=C.red, to_fill=C.blue),
+        G.Edge(start='hello', end='world', start_fill=C.red, end_fill=C.blue),
         node_fill=GRAY,
         edge_arrow=True,
     )
@@ -335,10 +339,10 @@ def demo_network():
         G.Node('Hello world', id='hello', pos=(0.25, 0.5), wrap=3),
         G.Node('This is a test of wrapping capabilities', id='test', pos=(0.75, 0.25), wrap=6),
         G.Node(G.Ellipse(aspect=1.5, fill=C.blue), id='ball', pos=(0.75, 0.75)),
-        G.Edge(from_='hello', to='test'),
-        G.Edge(from_='hello', to='ball', from_dir='s', curve=3),
+        G.Edge(start='hello', end='test'),
+        G.Edge(start='hello', end='ball', start_side='s', curve=3),
         aspect=1.5,
-        node_yrad=0.15,
+        node_ysize=0.3,
         node_rounded=True,
         node_fill=GRAY,
         edge_arrow_fill=C.white,
@@ -361,7 +365,7 @@ def demo_math():
 def demo_arrays():
     emoji = ['🗻', '🚀', '🐋', '🍉', '🍩']
     return G.Plot(
-        *[G.Text(e, pos=(i+1, i+1), rad=0.4) for i, e in enumerate(emoji)],
+        *[G.Text(e, pos=(i+1, i+1), size=0.8) for i, e in enumerate(emoji)],
         xlim=[0, 6],
         ylim=[0, 6],
         xticks=7,
@@ -372,12 +376,12 @@ def demo_arrays():
 def demo_colors():
     func = lambda x: -C.sin(x)
     pal = V.pal(C.palette(C.blue, C.red, (-1, 1)))
-    size_func = lambda x, y: 0.1 * (1 + C.abs(y)) / 2
+    size_func = lambda x, y: 0.2 * (1 + C.abs(y)) / 2
     shape_func = lambda x, y: G.Circle(fill=C.pal(y))
     xticks = [(x*C.pi, f'{x:.2g} π') for x in linspace(0, 2, 6)[1:]]
     plot = G.Plot(
         G.SymLine(fy=func),
-        G.SymPoints(fy=func, size=size_func, shape=shape_func, N=21),
+        G.SymPoints(fy=func, point_size=size_func, point_shape=shape_func, N=21),
         xlim=(0, 2*C.pi),
         ylim=(-1, 1),
         aspect=1.5,

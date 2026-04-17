@@ -137,7 +137,7 @@ def restart():
 def set_debug(debug=True):
     server.debug = debug
 
-def evaluate(jsx, size=(1000, 750), **kwargs):
+def evaluate(jsx, size=(1500, 1000), **kwargs):
     return server.jsx(str(jsx), size=size, **kwargs)
 
 def display(jsx, theme='dark', **kwargs):

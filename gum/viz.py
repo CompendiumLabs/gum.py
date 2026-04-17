@@ -2,7 +2,7 @@
 
 from itertools import cycle
 
-from .gen import C, GumData, Gum, SymPoints, SymLine, SymSpline, Plot, BarPlot, Bar
+from .gen import C, GumData, Gum, Points, SymLine, SymSpline, Plot, BarPlot
 from .utl import prefix_split
 
 ##
@@ -100,7 +100,7 @@ def lines(frame, spline=False, **kwargs):
     plot = Plot(*lines, **plot_args)
     return Gum(plot, vars=data)
 
-def points(frame, shape=None, **kwargs):
+def points(frame, shape=None, point_size=None, **kwargs):
     # collect arguments
     args = { **DEFAULT_PLOT, **kwargs }
     point_args, plot_args = prefix_split('point', args)
@@ -109,9 +109,19 @@ def points(frame, shape=None, **kwargs):
     frame = ensure_frame(frame)
     data = GumData.from_frame(frame)
 
+    # calc default point size
+    xsize = frame.index.max() - frame.index.min()
+    ysize = frame.max().max() - frame.min().min()
+    point_size = point_size or 0.01 * max(xsize, ysize)
+
     # data plotters
     points = [
-        SymPoints(xvals=data.index, yvals=v, shape=shape, **{'color': c, **point_args})
+        Points(
+            points=C.zip(data.index, v),
+            point_shape=shape,
+            point_size=point_size,
+            **{'color': c, **point_args}
+        )
         for v, c in zip(data, cycle(COLORS))
     ]
 
@@ -132,5 +142,5 @@ def bars(series, **kwargs):
     bdata = C.zip(data.index, values)
 
     # generate svg code
-    plot = BarPlot(bdata, **args)
+    plot = BarPlot(data=bdata, **args)
     return Gum(plot, vars=data)
