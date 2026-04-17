@@ -100,6 +100,7 @@ CLI options:
 |--------|-------------|---------|
 | `-s, --size <size>` | Terminal display size | 50 |
 | `-t, --theme <theme>` | Theme: `light` or `dark` | dark |
+| `-b, --background <color>` | Background color | - |
 | `-d, --demo <name>` | Run a named demo | - |
 
 Available demos (see `gum/dem.py` for code): gum, element, group, box, stack, grid, points, rect, ellipse, line, shape, spline, text, latex, titleframe, slide, sympoints, symline, symshape, symspline, symfill, graph, plot, axis, barplot, node, edge, network, math, arrays, colors
