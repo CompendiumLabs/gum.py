@@ -3,6 +3,7 @@
 import readline from 'readline'
 import { stdout } from 'process'
 
+import { type ThemeName } from 'gum-jsx'
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
 import { rasterizeSvg, formatImage } from 'gum-jsx/render'
 
@@ -19,17 +20,17 @@ function parseError(e: Error): ErrorResult {
     return { error: 'PARSE', message }
 }
 
-function handleGum(data: string, { output_format = 'kitty', theme, size, width, height }: { output_format: 'svg' | 'png' | 'kitty'; theme: string; size: number | [number, number], width: number; height: number }): string | Buffer {
+function handleGum(data: string, { output_format = 'kitty', theme, size, width, height, background }: { output_format: 'svg' | 'png' | 'kitty'; theme: ThemeName; size: number | [number, number], width: number; height: number; background: string }): string | Buffer {
     const elem = evaluateGum(data, { size, theme })
     const svg = elem.svg()
     if (output_format == 'svg') return svg
-    const dat = rasterizeSvg(svg, { size: elem.size, width, height })
+    const dat = rasterizeSvg(svg, { size: elem.size, width, height, background })
     if (output_format == 'png') return dat
     return formatImage(dat)
 }
 
-function handleSvg(data: string, { output_format = 'kitty', size, width, height }: { output_format: 'png' | 'kitty'; size: [number, number], width: number; height: number }): string | Buffer {
-    const dat = rasterizeSvg(data, { size, width, height })
+function handleSvg(data: string, { output_format = 'kitty', size, width, height, background }: { output_format: 'png' | 'kitty'; size: [number, number], width: number; height: number; background: string }): string | Buffer {
+    const dat = rasterizeSvg(data, { size, width, height, background })
     if (output_format == 'png') return dat
     return formatImage(dat)
 }
