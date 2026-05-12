@@ -1,10 +1,10 @@
 <div align="center">
-<img src="image/logo.png" alt="gum.py" width="500" />
+<img src="images/logo.png" alt="gum.py" width="500" />
 <br/>
 </div>
 
 <div align="center">
-<img src="image/nexus.svg" alt="nexus" width="250" />
+<img src="images/nexus.svg" alt="nexus" width="250" />
 <br/><br/>
 </div>
 
