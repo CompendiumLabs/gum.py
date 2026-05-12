@@ -3,7 +3,7 @@
 import readline from 'readline'
 import { stdout } from 'process'
 
-import { type ThemeName } from 'gum-jsx'
+import type { ThemeName, Size } from 'gum-jsx'
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
 import { rasterizeSvg, formatImage } from 'gum-jsx/render'
 
@@ -20,17 +20,17 @@ function parseError(e: Error): ErrorResult {
     return { error: 'PARSE', message }
 }
 
-function handleGum(data: string, { output_format = 'kitty', theme, size, width, height, background }: { output_format: 'svg' | 'png' | 'kitty'; theme: ThemeName; size: number | [number, number], width: number; height: number; background: string }): string | Buffer {
+async function handleGum(data: string, { output_format = 'kitty', theme, size, background }: { output_format: 'svg' | 'png' | 'kitty'; theme: ThemeName; size: number | Size, background: string }): Promise<string | Buffer> {
     const elem = evaluateGum(data, { size, theme })
     const svg = elem.svg()
     if (output_format == 'svg') return svg
-    const dat = rasterizeSvg(svg, { size: elem.size, width, height, background })
+    const dat = await rasterizeSvg(svg, { size: elem.size, background })
     if (output_format == 'png') return dat
     return formatImage(dat)
 }
 
-function handleSvg(data: string, { output_format = 'kitty', size, width, height, background }: { output_format: 'png' | 'kitty'; size: [number, number], width: number; height: number; background: string }): string | Buffer {
-    const dat = rasterizeSvg(data, { size, width, height, background })
+async function handleSvg(data: string, { output_format = 'kitty', size, background }: { output_format: 'png' | 'kitty'; size: Size, background: string }): Promise<string | Buffer> {
+    const dat = await rasterizeSvg(data, { size, background })
     if (output_format == 'png') return dat
     return formatImage(dat)
 }
@@ -49,9 +49,9 @@ rl.on('line', async (line) => {
         const { data, input_format, ...opts } = JSON.parse(line)
         let result: string | Buffer
         if (input_format == 'jsx') {
-            result = handleGum(data, opts)
+            result = await handleGum(data, opts)
         } else if (input_format == 'svg') {
-            result = handleSvg(data, opts)
+            result = await handleSvg(data, opts)
         } else if (input_format == 'png') {
             result = handlePng(data)
         } else {
