@@ -1,10 +1,27 @@
 # terminal tools
 
+import io
 import os
 import json
+import base64
 import shutil
 import threading
 import subprocess
+from PIL import Image
+
+##
+## image handling
+##
+
+def decode_png(dat):
+    img = Image.open(io.BytesIO(dat))
+    img.load()
+    return img
+
+def encode_png(img):
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    return buf.getvalue()
 
 ##
 ## error handling
@@ -72,7 +89,7 @@ class GumUnixPipe:
         self._pump_thread = threading.Thread(target=pump_loop, daemon=True)
         self._pump_thread.start()
 
-    def post(self, **request):
+    def post(self, use_pil=True, **request):
         # ensure server
         if self.proc is None:
             self.init()
@@ -80,6 +97,11 @@ class GumUnixPipe:
         # check if stdin is closed
         if self.proc.poll() is not None:
             raise ValueError('[gum server] server exited')
+
+        # encode PIL image if needed
+        if isinstance(data := request['data'], Image.Image):
+            bdat = encode_png(data) if use_pil else data
+            request['data'] = base64.b64encode(bdat).decode()
 
         # send request
         request1 = { k: v for k, v in request.items() if v is not None }
@@ -101,6 +123,11 @@ class GumUnixPipe:
             emsg = result['message']
             raise GumError(etype, emsg)
 
+        # decode base64 if needed
+        if request.get('output_format') == 'png':
+            dat = base64.b64decode(result)
+            return decode_png(dat) if use_pil else dat
+
         # return response
         return result
 
@@ -114,15 +141,6 @@ class GumUnixPipe:
     def restart(self):
         self.close()
         self.init()
-
-    def jsx(self, jsx, **kwargs):
-        return self.post(input_format='jsx', data=jsx, **kwargs)
-
-    def svg(self, svg, **kwargs):
-        return self.post(input_format='svg', data=svg, **kwargs)
-
-    def png(self, png, **kwargs):
-        return self.post(input_format='png', data=png, **kwargs)
 
 ##
 ## server instance
@@ -138,18 +156,18 @@ def set_debug(debug=True):
     server.debug = debug
 
 def evaluate(jsx, size=(1500, 1000), **kwargs):
-    return server.jsx(str(jsx), size=size, **kwargs)
+    return server.post(data=str(jsx), size=size, **kwargs)
 
 def display(jsx, theme='dark', **kwargs):
     data = evaluate(jsx, theme=theme, **kwargs)
     print(data)
 
 def display_svg(svg, **kwargs):
-    data = server.svg(svg, **kwargs)
+    data = server.post(data=svg, input_format='svg', **kwargs)
     print(data)
 
 def display_png(png, **kwargs):
-    data = server.png(png, **kwargs)
+    data = server.post(data=png, input_format='png', **kwargs)
     print(data)
 
 def readtext(path):
