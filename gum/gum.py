@@ -100,8 +100,11 @@ class GumUnixPipe:
 
         # encode PIL image if needed
         if isinstance(data := request['data'], Image.Image):
-            bdat = encode_png(data) if use_pil else data
-            request['data'] = base64.b64encode(bdat).decode()
+            request['data'] = encode_png(data) if use_pil else data
+
+        # encode base64 if needed
+        if isinstance(data := request['data'], bytes):
+            request['data'] = base64.b64encode(data).decode()
 
         # send request
         request1 = { k: v for k, v in request.items() if v is not None }
@@ -125,8 +128,8 @@ class GumUnixPipe:
 
         # decode base64 if needed
         if request.get('output_format') == 'png':
-            dat = base64.b64decode(result)
-            return decode_png(dat) if use_pil else dat
+            result = base64.b64decode(result)
+            result = decode_png(result) if use_pil else result
 
         # return response
         return result
