@@ -1,13 +1,12 @@
 // pipe server
 
-import readline from 'readline'
-import { stdout } from 'process'
+import { stdout, stderr } from 'process'
 
 import { type ThemeName, type Size } from 'gum-jsx'
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
-import { rasterizeSvg, rasterizePixels, formatImage } from 'gum-jsx/render'
+import { rasterizeSvg, rasterizePixels, formatImage, formatPixels } from 'gum-jsx/render'
 
-type ErrorResult = { error: string; message: string }
+type ErrorResult = { error: string; message: string; stack?: string }
 type PixelData = { size: Size; length: number; data: Buffer }
 type PngData = { size: Size; length: number; data: Buffer }
 type StringFormat = 'string' | 'kitty'
@@ -15,22 +14,75 @@ type StringResult = { format: StringFormat; data: string }
 type PngResult = { format: 'png'; data: PngData }
 type PixelResult = { format: 'pixels'; data: PixelData }
 type GumResult = StringResult | PngResult | PixelResult
+type PipeJson = Record<string, unknown>
+type PipeMessage = { json: PipeJson; binary?: Buffer }
 
-function parseError(e: Error): ErrorResult {
-    const { message } = e
-    if (e instanceof ErrorNoCode) {
-        return { error: 'NOCODE', message }
-    } else if (e instanceof ErrorNoReturn) {
-        return { error: 'NORETURN', message }
-    } else if (e instanceof ErrorNoElement) {
-        return { error: 'NOELEMENT', message }
+function createMessageParser(onMessage: (message: PipeMessage) => void): (chunk: Buffer) => void {
+    let buffer = Buffer.alloc(0)
+    let pendingJson: PipeJson | null = null
+    let pendingLength = 0
+
+    return (chunk: Buffer) => {
+        buffer = Buffer.concat([ buffer, chunk ])
+
+        while (true) {
+            if (pendingJson == null) {
+                const newline = buffer.indexOf(0x0a)
+                if (newline == -1) return
+
+                const line = buffer.subarray(0, newline).toString('utf8')
+                buffer = buffer.subarray(newline + 1)
+                const parsedJson = JSON.parse(line) as PipeJson
+                pendingJson = parsedJson
+
+                const bytesLength = parsedJson.bytes_length
+                pendingLength = bytesLength == null ? 0 : Number(bytesLength)
+                if (!Number.isInteger(pendingLength) || pendingLength < 0) {
+                    throw new Error(`Invalid bytes_length: ${bytesLength}`)
+                }
+            }
+
+            if (buffer.length < pendingLength) return
+
+            const json = pendingJson as PipeJson
+            const binary = pendingLength > 0 ? buffer.subarray(0, pendingLength) : undefined
+            buffer = buffer.subarray(pendingLength)
+            pendingJson = null
+            pendingLength = 0
+
+            onMessage({ json, binary })
+        }
     }
-    return { error: 'PARSE', message }
 }
 
-function handlePng(data: Buffer | string, { output_format = 'kitty' }: { output_format: 'kitty' }): GumResult {
+function parseError(e: Error): ErrorResult {
+    const { message, stack } = e
+    if (e instanceof ErrorNoCode) {
+        return { error: 'NOCODE', message, stack }
+    } else if (e instanceof ErrorNoReturn) {
+        return { error: 'NORETURN', message, stack }
+    } else if (e instanceof ErrorNoElement) {
+        return { error: 'NOELEMENT', message, stack }
+    }
+    return { error: 'PARSE', message, stack }
+}
+
+function printError(e: Error): void {
+    const result = parseError(e)
+    stdout.write(JSON.stringify({ format: 'error', data: result }) + '\n')
+}
+
+function handlePng(data: Buffer, { output_format = 'kitty' }: { output_format?: 'kitty' }): GumResult {
     if (output_format == 'kitty') {
         return { format: 'kitty', data: formatImage(data) }
+    } else {
+        throw new Error(`Invalid output format: ${output_format}`)
+    }
+}
+
+function handlePixels(data: Buffer, { output_format = 'kitty', size }: { output_format?: 'kitty'; size: Size }): GumResult {
+    if (output_format == 'kitty') {
+        return { format: 'kitty', data: formatPixels(data, size) }
     } else {
         throw new Error(`Invalid output format: ${output_format}`)
     }
@@ -70,21 +122,19 @@ function handleJsx(data: string, { output_format = 'kitty', theme, size, backgro
     return handleSvg(svg, { output_format, size: elem.size, background })
 }
 
-// create readline interface
-const rl = readline.createInterface({ input: process.stdin })
-
-// handle lines from stdin
-rl.on('line', (line) => {
+function handleMessage({ json, binary }: PipeMessage) {
     try {
-        const { data, input_format = 'jsx', ...opts } = JSON.parse(line)
+        const { data, input_format = 'jsx', ...opts } = json
 
         let result: GumResult
         if (input_format == 'jsx') {
-            result = handleJsx(data, opts)
+            result = handleJsx(data as string, opts as any)
         } else if (input_format == 'svg') {
-            result = handleSvg(data, opts)
+            result = handleSvg(data as string, opts as any)
         } else if (input_format == 'png') {
-            result = handlePng(data, opts)
+            result = handlePng(binary as Buffer, opts as any)
+        } else if (input_format == 'pixels') {
+            result = handlePixels(binary as Buffer, opts as any)
         } else {
             throw new Error(`Invalid input format: ${input_format}`)
         }
@@ -99,7 +149,16 @@ rl.on('line', (line) => {
             stdout.write(JSON.stringify({ format, data: output_data }) + '\n')
         }
     } catch (e: unknown) {
-        const result = parseError(e as Error)
-        stdout.write(JSON.stringify({ format: 'error', data: result }) + '\n')
+        printError(e as Error)
+    }
+}
+
+const parseMessage = createMessageParser(handleMessage)
+
+process.stdin.on('data', (chunk: Buffer) => {
+    try {
+        parseMessage(chunk)
+    } catch (e: unknown) {
+        printError(e as Error)
     }
 })

@@ -3,11 +3,22 @@
 import io
 import os
 import json
-import base64
 import shutil
 import threading
 import subprocess
 from PIL import Image
+
+##
+## type checks
+##
+
+def is_numpy_array(x):
+    cls = type(x)
+    return cls.__module__ == 'numpy' and cls.__name__ == 'ndarray'
+
+def is_torch_tensor(x):
+    cls = type(x)
+    return cls.__module__ == 'torch' and cls.__name__ == 'Tensor'
 
 ##
 ## image handling
@@ -54,10 +65,11 @@ class GumErrorType:
     NOELEMENT = 'NOELEMENT'
 
 class GumError(Exception):
-    def __init__(self, error_type, error_message):
+    def __init__(self, error_type, error_message, error_stack=None):
         self.error_type = error_type
         self.error_message = error_message
-        super().__init__(self.error_message)
+        self.error_stack = error_stack
+        super().__init__(f'{self.error_type}: {self.error_message}\n\n{self.error_stack}')
 
 ##
 ## server interface
@@ -129,16 +141,28 @@ class GumUnixPipe:
             raise ValueError('[gum server] server exited')
 
         # encode PIL image if needed
-        if isinstance(data := request['data'], Image.Image):
+        data = request['data']
+        if isinstance(data, Image.Image):
             request['data'] = encode_png(data)
+        elif is_numpy_array(data):
+            request['size'] = data.shape[:2]
+            request['data'] = data.tobytes()
+        elif is_torch_tensor(data):
+            request['size'] = data.shape[:2]
+            request['data'] = data.detach().cpu().contiguous().numpy().tobytes()
 
-        # encode base64 if needed
-        if isinstance(data := request['data'], bytes):
-            request['data'] = base64.b64encode(data).decode()
+        # handle regular message and bytes data
+        if isinstance(request['data'], bytes):
+            bytes_data = request.pop('data')
+            request['bytes_length'] = len(bytes_data)
+        else:
+            bytes_data = None
+        request1 = { k: v for k, v in request.items() if v is not None }
 
         # send request
-        request1 = { k: v for k, v in request.items() if v is not None }
         self.proc.stdin.write((json.dumps(request1) + '\n').encode())
+        if bytes_data is not None:
+            self.proc.stdin.write(bytes_data)
         self.proc.stdin.flush()
 
         # get reply
@@ -154,7 +178,8 @@ class GumUnixPipe:
         if fmt == 'error':
             etype = data['error']
             emsg = data['message']
-            raise GumError(etype, emsg)
+            estack = data.get('stack', None)
+            raise GumError(etype, emsg, estack)
         elif fmt == 'png':
             size, length = data['size'], data['length']
             png = self.read_exact(length)
@@ -193,7 +218,7 @@ def set_debug(debug=True):
     server.debug = debug
 
 def evaluate(jsx, size=(1500, 1000), **kwargs):
-    return server.post(data=str(jsx), size=size, **kwargs)
+    return server.post(data=jsx, size=size, **kwargs)
 
 def display(jsx, theme='dark', **kwargs):
     data = evaluate(jsx, theme=theme, **kwargs)
