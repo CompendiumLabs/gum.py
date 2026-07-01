@@ -13,10 +13,30 @@ from PIL import Image
 ## image handling
 ##
 
-def decode_png(dat):
-    img = Image.open(io.BytesIO(dat))
-    img.load()
-    return img
+def decode_png(dat, return_format='pil'):
+    if return_format == 'pil':
+        img = Image.open(io.BytesIO(dat))
+        img.load()
+        return img
+    elif return_format == 'bytes':
+        return dat
+    else:
+        raise ValueError(f'Invalid return format for PNG: {return_format}')
+
+# assumes 4 channels (RGBA)
+def decode_pixels(dat, size, return_format='pil'):
+    if return_format == 'pil':
+        return Image.frombytes('RGBA', tuple(size), dat)
+    elif return_format == 'numpy':
+        import numpy as np
+        return np.frombuffer(dat, dtype=np.uint8).reshape(*size, 4)
+    elif return_format == 'torch':
+        import torch
+        return torch.frombuffer(dat, dtype=torch.uint8).reshape(*size, 4)
+    elif return_format == 'bytes':
+        return dat
+    else:
+        raise ValueError(f'Invalid return format for pixels: {return_format}')
 
 def encode_png(img):
     buf = io.BytesIO()
@@ -74,8 +94,6 @@ class GumUnixPipe:
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            text=True,
-            bufsize=1,
         )
 
         # pump stderr to stdout
@@ -85,11 +103,23 @@ class GumUnixPipe:
         def pump_loop():
             for line in self.proc.stderr:
                 if self.debug:
-                    print(f'[gum server] {line}')
+                    err = line.decode(errors='replace')
+                    print(f'[gum server] {err}')
         self._pump_thread = threading.Thread(target=pump_loop, daemon=True)
         self._pump_thread.start()
 
-    def post(self, use_pil=True, **request):
+    def read_exact(self, n):
+        chunks = []
+        remaining = n
+        while remaining > 0:
+            chunk = self.proc.stdout.read(remaining)
+            if chunk == b'':
+                raise ValueError('[gum server] connection closed while reading binary payload')
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        return b''.join(chunks)
+
+    def post(self, return_format='pil', **request):
         # ensure server
         if self.proc is None:
             self.init()
@@ -100,7 +130,7 @@ class GumUnixPipe:
 
         # encode PIL image if needed
         if isinstance(data := request['data'], Image.Image):
-            request['data'] = encode_png(data) if use_pil else data
+            request['data'] = encode_png(data)
 
         # encode base64 if needed
         if isinstance(data := request['data'], bytes):
@@ -108,17 +138,17 @@ class GumUnixPipe:
 
         # send request
         request1 = { k: v for k, v in request.items() if v is not None }
-        self.proc.stdin.write(json.dumps(request1) + '\n')
+        self.proc.stdin.write((json.dumps(request1) + '\n').encode())
         self.proc.stdin.flush()
 
         # get reply
         reply = self.proc.stdout.readline()
-        if reply == '':
+        if reply == b'':
             raise ValueError('[gum server] connection closed')
 
         # read response
-        response = json.loads(reply)
-        ok, result = response['ok'], response['result']
+        response = json.loads(reply.decode())
+        ok, result = response['ok'], response.get('result')
 
         # check for errors
         if not ok:
@@ -129,7 +159,11 @@ class GumUnixPipe:
         # decode base64 if needed
         if request.get('output_format') == 'png':
             result = base64.b64decode(result)
-            result = decode_png(result) if use_pil else result
+            result = decode_png(result, return_format)
+        elif request.get('output_format') == 'pixels':
+            size, length = response['size'], response['length']
+            data = self.read_exact(length)
+            return decode_pixels(data, size, return_format)
 
         # return response
         return result
