@@ -29,10 +29,10 @@ def decode_pixels(dat, size, return_format='pil'):
         return Image.frombytes('RGBA', tuple(size), dat)
     elif return_format == 'numpy':
         import numpy as np
-        return np.frombuffer(dat, dtype=np.uint8).reshape(*size, 4)
+        return np.frombuffer(bytearray(dat), dtype=np.uint8).reshape(*size, 4)
     elif return_format == 'torch':
         import torch
-        return torch.frombuffer(dat, dtype=torch.uint8).reshape(*size, 4)
+        return torch.frombuffer(bytearray(dat), dtype=torch.uint8).reshape(*size, 4)
     elif return_format == 'bytes':
         return dat
     else:
@@ -148,25 +148,24 @@ class GumUnixPipe:
 
         # read response
         response = json.loads(reply.decode())
-        ok, result = response['ok'], response.get('result')
+        fmt, data = response['format'], response['data']
 
-        # check for errors
-        if not ok:
-            etype = result['error']
-            emsg = result['message']
+        # decode response data
+        if fmt == 'error':
+            etype = data['error']
+            emsg = data['message']
             raise GumError(etype, emsg)
-
-        # decode base64 if needed
-        if request.get('output_format') == 'png':
-            result = base64.b64decode(result)
-            result = decode_png(result, return_format)
-        elif request.get('output_format') == 'pixels':
-            size, length = response['size'], response['length']
-            data = self.read_exact(length)
-            return decode_pixels(data, size, return_format)
-
-        # return response
-        return result
+        elif fmt == 'base64':
+            b64 = base64.b64decode(data)
+            return decode_png(b64, return_format)
+        elif fmt == 'pixels':
+            size, length = data['size'], data['length']
+            pixels = self.read_exact(length)
+            return decode_pixels(pixels, size, return_format)
+        elif fmt == 'string' or fmt == 'kitty':
+            return data
+        else:
+            raise ValueError(f'Invalid output format: {fmt}')
 
     def close(self):
         if self.proc is not None:

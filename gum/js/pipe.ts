@@ -3,13 +3,16 @@
 import readline from 'readline'
 import { stdout } from 'process'
 
-import { is_string, type ThemeName, type Size } from 'gum-jsx'
+import { type ThemeName, type Size } from 'gum-jsx'
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
 import { rasterizeSvg, rasterizePixels, formatImage } from 'gum-jsx/render'
 
 type ErrorResult = { error: string; message: string }
-type PixelResult = { size: Size; length: number; data: Buffer }
-type GumResult = string | PixelResult
+type PixelData = { size: Size; length: number; data: Buffer }
+type StringFormat = 'string' | 'base64' | 'kitty'
+type StringResult = { format: StringFormat; data: string }
+type PixelResult = { format: 'pixels'; data: PixelData }
+type GumResult = StringResult | PixelResult
 
 function parseError(e: Error): ErrorResult {
     const { message } = e
@@ -23,33 +26,41 @@ function parseError(e: Error): ErrorResult {
     return { error: 'PARSE', message }
 }
 
-function handlePng(data: Buffer | string, { output_format = 'kitty' }: { output_format: 'kitty' }): string {
+function handlePng(data: Buffer | string, { output_format = 'kitty' }: { output_format: 'kitty' }): GumResult {
     if (output_format == 'kitty') {
-        return formatImage(data)
+        return { format: 'kitty', data: formatImage(data) }
     } else {
         throw new Error(`Invalid output format: ${output_format}`)
     }
 }
 
 function handleSvg(data: string, { output_format = 'kitty', size, background }: { output_format: 'png' | 'pixels' | 'kitty'; size: Size, background: string }): GumResult {
+    // handle pixels separately
     if (output_format == 'pixels') {
         const image = rasterizePixels(data, { size, background })
-        return {
+        const pixels: PixelData = {
             size: [ image.width, image.height ],
             length: image.data.byteLength,
             data: Buffer.from(image.data),
         }
+        return { format: 'pixels', data: pixels }
     }
 
+    // regular png path
     const dat = rasterizeSvg(data, { size, background })
-    if (output_format == 'png') return dat.toString('base64')
+    if (output_format == 'png') return {
+        format: 'base64',
+        data: dat.toString('base64')
+    }
+
+    // this must be kitty format
     return handlePng(dat, { output_format })
 }
 
 function handleJsx(data: string, { output_format = 'kitty', theme, size, background }: { output_format: 'svg' | 'png' | 'kitty' | 'pixels'; theme: ThemeName; size: number | Size, background: string }): GumResult {
     const elem = evaluateGum(data, { size, theme })
     const svg = elem.svg()
-    if (output_format == 'svg') return svg
+    if (output_format == 'svg') return { format: 'string', data: svg }
     return handleSvg(svg, { output_format, size: elem.size, background })
 }
 
@@ -72,15 +83,17 @@ rl.on('line', (line) => {
             throw new Error(`Invalid input format: ${input_format}`)
         }
 
-        if (is_string(result)) {
-            stdout.write(JSON.stringify({ ok: true, result }) + '\n')
+        const { format, data: output_data } = result
+        if (format == 'pixels') {
+            const { size, length, data: pixel_data } = output_data
+            const image_data = { size, length }
+            stdout.write(JSON.stringify({ format, data: image_data }) + '\n')
+            stdout.write(pixel_data)
         } else {
-            const { size, length, data } = result
-            stdout.write(JSON.stringify({ ok: true, size, length }) + '\n')
-            stdout.write(data)
+            stdout.write(JSON.stringify({ format, data: output_data }) + '\n')
         }
     } catch (e: unknown) {
         const result = parseError(e as Error)
-        stdout.write(JSON.stringify({ ok: false, result }) + '\n')
+        stdout.write(JSON.stringify({ format: 'error', data: result }) + '\n')
     }
 })
