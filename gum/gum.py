@@ -218,7 +218,16 @@ def set_debug(debug=True):
     server.debug = debug
 
 def evaluate(jsx, size=(1500, 1000), **kwargs):
-    return server.post(data=jsx, size=size, **kwargs)
+    return server.post(data=str(jsx), size=size, **kwargs)
+
+def evaluate_svg(svg, **kwargs):
+    return server.post(data=svg, input_format='svg', **kwargs)
+
+def evaluate_png(png, **kwargs):
+    return server.post(data=png, input_format='png', **kwargs)
+
+def evaluate_pixels(pixels, **kwargs):
+    return server.post(data=pixels, input_format='pixels', **kwargs)
 
 def display(jsx, theme='dark', **kwargs):
     data = evaluate(jsx, theme=theme, **kwargs)
@@ -230,6 +239,10 @@ def display_svg(svg, **kwargs):
 
 def display_png(png, **kwargs):
     data = server.post(data=png, input_format='png', **kwargs)
+    print(data)
+
+def display_pixels(pixels, **kwargs):
+    data = server.post(data=pixels, input_format='pixels', **kwargs)
     print(data)
 
 def readtext(path):
