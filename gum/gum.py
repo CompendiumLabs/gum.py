@@ -155,9 +155,10 @@ class GumUnixPipe:
             etype = data['error']
             emsg = data['message']
             raise GumError(etype, emsg)
-        elif fmt == 'base64':
-            b64 = base64.b64decode(data)
-            return decode_png(b64, return_format)
+        elif fmt == 'png':
+            size, length = data['size'], data['length']
+            png = self.read_exact(length)
+            return decode_png(png, return_format)
         elif fmt == 'pixels':
             size, length = data['size'], data['length']
             pixels = self.read_exact(length)

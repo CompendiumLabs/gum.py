@@ -9,10 +9,12 @@ import { rasterizeSvg, rasterizePixels, formatImage } from 'gum-jsx/render'
 
 type ErrorResult = { error: string; message: string }
 type PixelData = { size: Size; length: number; data: Buffer }
-type StringFormat = 'string' | 'base64' | 'kitty'
+type PngData = { size: Size; length: number; data: Buffer }
+type StringFormat = 'string' | 'kitty'
 type StringResult = { format: StringFormat; data: string }
+type PngResult = { format: 'png'; data: PngData }
 type PixelResult = { format: 'pixels'; data: PixelData }
-type GumResult = StringResult | PixelResult
+type GumResult = StringResult | PngResult | PixelResult
 
 function parseError(e: Error): ErrorResult {
     const { message } = e
@@ -47,14 +49,18 @@ function handleSvg(data: string, { output_format = 'kitty', size, background }: 
     }
 
     // regular png path
-    const dat = rasterizeSvg(data, { size, background })
-    if (output_format == 'png') return {
-        format: 'base64',
-        data: dat.toString('base64')
+    const png = rasterizeSvg(data, { size, background })
+    if (output_format == 'png') {
+        const png_data = {
+            size,
+            length: png.byteLength,
+            data: png,
+        }
+        return { format: 'png', data: png_data }
     }
 
     // this must be kitty format
-    return handlePng(dat, { output_format })
+    return handlePng(png, { output_format })
 }
 
 function handleJsx(data: string, { output_format = 'kitty', theme, size, background }: { output_format: 'svg' | 'png' | 'kitty' | 'pixels'; theme: ThemeName; size: number | Size, background: string }): GumResult {
@@ -84,7 +90,7 @@ rl.on('line', (line) => {
         }
 
         const { format, data: output_data } = result
-        if (format == 'pixels') {
+        if (format == 'png' || format == 'pixels') {
             const { size, length, data: pixel_data } = output_data
             const image_data = { size, length }
             stdout.write(JSON.stringify({ format, data: image_data }) + '\n')
