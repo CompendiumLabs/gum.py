@@ -254,9 +254,21 @@ def convert_argval(v):
     else:
         return f'{{{stringify(v)}}}'
 
+COLOR_KEYS = { 'fill', 'stroke', 'color' }
+def convert_color(v):
+    if isinstance(v, tuple):
+        nums = ", ".join([ str(c) for c in v[:4] ])
+        return f'rgb({nums})'
+    else:
+        return v
+
 def convert_args(opts):
+    opts1 = {
+        k: convert_color(v) if k in COLOR_KEYS else v
+        for k, v in opts.items() if v is not None
+    }
     return ' '.join([
-        f'{snake_case(k)}={convert_argval(v)}' for k, v in opts.items()
+        f'{snake_case(k)}={convert_argval(v)}' for k, v in opts1.items()
     ])
 
 def convert_child(value, raw=False):
