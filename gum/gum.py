@@ -63,6 +63,7 @@ class GumErrorType:
     NOCODE = 'NOCODE'
     NORETURN = 'NORETURN'
     NOELEMENT = 'NOELEMENT'
+    STRICT = 'STRICT'
 
 class GumError(Exception):
     def __init__(self, error_type, error_message, error_stack=None):

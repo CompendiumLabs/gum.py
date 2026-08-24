@@ -63,6 +63,10 @@ function parseError(e: Error): ErrorResult {
         return { error: 'NORETURN', message, stack }
     } else if (e instanceof ErrorNoElement) {
         return { error: 'NOELEMENT', message, stack }
+    } else if (e.name == 'StrictError') {
+        // a rendering fallback (bad tex, unknown command, missing glyph) that
+        // strict mode turned into an error; only raised when strict was requested
+        return { error: 'STRICT', message, stack }
     }
     return { error: 'PARSE', message, stack }
 }
@@ -115,8 +119,8 @@ function handleSvg(data: string, { output_format = 'kitty', size, background }: 
     return handlePng(png, { output_format })
 }
 
-function handleJsx(data: string, { output_format = 'kitty', theme, size, background }: { output_format: 'svg' | 'png' | 'kitty' | 'pixels'; theme: ThemeName; size: number | Size, background: string }): GumResult {
-    const elem = evaluateGum(data, { size, theme })
+function handleJsx(data: string, { output_format = 'kitty', theme, size, background, seed, strict }: { output_format: 'svg' | 'png' | 'kitty' | 'pixels'; theme: ThemeName; size: number | Size, background: string, seed?: number, strict?: boolean }): GumResult {
+    const elem = evaluateGum(data, { size, theme, seed, strict })
     const svg = elem.svg()
     if (output_format == 'svg') return { format: 'string', data: svg }
     return handleSvg(svg, { output_format, size: elem.size, background })
