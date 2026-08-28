@@ -8,7 +8,7 @@
 <br/><br/>
 </div>
 
-A Python wrapper for [gum.jsx](https://github.com/CompendiumLabs/gum.jsx), a language for creating visualizations using a React-like JSX dialect that evaluates to SVG. Designed for general graphics, plots, graphs, and network diagrams. Automatically renders in IPython console and Jupyter notebooks.
+A Python wrapper for [gum.jsx](https://github.com/CompendiumLabs/gum-jsx), a language for creating visualizations using a React-like JSX dialect that evaluates to SVG. Designed for general graphics, plots, graphs, and network diagrams. Automatically renders in IPython console and Jupyter notebooks.
 
 Head to **[compendiumlabs.ai/gum](https://compendiumlabs.ai/gum)** for a live demo and documentation on the underlying `gum.jsx` library.
 
