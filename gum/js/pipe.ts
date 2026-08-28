@@ -2,9 +2,12 @@
 
 import { stdout, stderr } from 'process'
 
-import { type ThemeName, type Size } from 'gum-jsx'
-import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from 'gum-jsx/eval'
-import { rasterizeSvg, rasterizePixels, formatImage, formatPixels } from 'gum-jsx/render'
+// importing @gum-jsx/math registers the latex elements and katex fonts with core,
+// so it must come before evaluateGum is used
+import '@gum-jsx/math'
+import { type ThemeName, type Size } from '@gum-jsx/core'
+import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from '@gum-jsx/core/eval'
+import { rasterizeSvg, rasterizePixels, formatImage, formatPixels } from '@gum-jsx/node'
 
 type ErrorResult = { error: string; message: string; stack?: string }
 type PixelData = { size: Size; length: number; data: Buffer }

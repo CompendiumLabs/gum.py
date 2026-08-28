@@ -4,9 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Overview
 
-`gum.py` is a Python wrapper for the `gum.js` visualization library. It allows you to programmatically generate JSX code from Python, which is then evaluated by a JavaScript (bun or node) subprocess running `gum.js` to produce SVG or PNG output. The library supports terminal display (kitty image protocol) and Jupyter notebook rendering.
+`gum.py` is a Python wrapper for the `gum.jsx` visualization library. It allows you to programmatically generate JSX code from Python, which is then evaluated by a JavaScript (bun or node) subprocess running `gum.jsx` to produce SVG or PNG output. The library supports terminal display (kitty image protocol) and Jupyter notebook rendering.
 
-See `../gum.js/CLAUDE.md` for details on the underlying gum.js library and its component system.
+The JS side lives in `gum/js/` and depends on three `@gum-jsx/*` libraries from `../gum-org`
+(see each package's `CLAUDE.md` for details on the underlying library and its component system):
+
+- `@gum-jsx/core` (`../gum-org/gum-jsx-core`) - the JSX → SVG evaluator (`evaluateGum`) and core elements
+- `@gum-jsx/math` (`../gum-org/gum-jsx-math`) - the `Latex`/`Tex` elements and KaTeX fonts; `pipe.ts` imports it first so they register with core
+- `@gum-jsx/node` (`../gum-org/gum-jsx-node`) - PNG/pixel rasterization (`rasterizeSvg`, `rasterizePixels`) and kitty output (`formatImage`, `formatPixels`)
+
+While unpublished these are `link:` dependencies in `gum/js/package.json`, resolved through
+bun's global link registry (`bun link` in each `gum-org` sibling, then `bun install` in `gum/js`).
 
 ## Commands
 
@@ -71,15 +79,16 @@ elem = gum.demo('plot')
 - Supports arithmetic via `AlgMixin`: `x + y` → `(x)+(y)`
 
 **Con** - Constant/expression reference
-- References gum.js constants: `C.sin`, `C.blue`, `C.pi`
+- References gum.jsx constants: `C.sin`, `C.blue`, `C.pi`
 - Also supports arithmetic operations
 
 ### Server Interface (gum.py)
 
 **GumUnixPipe** - Singleton bun/node subprocess manager
-- Spawns `node gum.js/gum.js` with JSON-over-pipes protocol
-- `evaluate(code)` → SVG string
-- `render(code)` → PNG bytes (base64 decoded)
+- Spawns `bun gum/js/pipe.ts` (runtime from `GUM_JSX_RUNTIME`, default `bun`) with a JSON-over-pipes protocol; binary payloads (png/pixels) follow the JSON line as raw bytes with a `length`
+- `evaluate(code, output_format='svg')` → SVG string; `'png'` → PIL image (or bytes with `return_format='bytes'`); `'pixels'` → RGBA PIL/numpy/torch; `'kitty'` (default) → terminal escape string
+- `evaluate_svg` / `evaluate_png` / `evaluate_pixels` → feed existing svg/png/pixel data back through the same pipe (e.g. to kitty)
+- Passes through `theme`, `size`, `background`, `seed`, `strict`; errors come back as `GumError` with type PARSE/NOCODE/NORETURN/NOELEMENT/STRICT
 - Auto-restarts on connection close
 
 ### Component Wrappers (gen.py)
@@ -150,7 +159,7 @@ gum = Gum(plot, vars=data)
 # str(gum) → "const index = [...]\nconst value_0 = [...]\n\nreturn <Plot>...</Plot>"
 ```
 
-## Key Differences from gum.js
+## Key Differences from gum.jsx
 
 - Python uses `snake_case` for props (converted to `kebab-case` in JSX)
 - Python `from_` kwarg becomes JSX `from` (reserved word handling)
