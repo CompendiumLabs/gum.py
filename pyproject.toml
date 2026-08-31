@@ -12,6 +12,9 @@ license = {text = "MIT"}
 authors = [
     {name = "Douglas Hanley"}
 ]
+dependencies = [
+    "Pillow"
+]
 
 [project.urls]
 Homepage = "https://github.com/CompendiumLabs/gum.py"
