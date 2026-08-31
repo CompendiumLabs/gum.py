@@ -187,8 +187,8 @@ def demo_slide():
 
 def demo_latex():
     return G.VStack(
-        G.TextFrame(G.Latex('\\int_0^{\\infty} \\exp(-x^2) dx = \\sqrt{\\pi}')),
-        G.TextFrame(G.Latex('\\sin^2(\\theta) + \\cos^2(\\theta) = 1')),
+        G.Frame(G.Latex('\\int_0^{\\infty} \\exp(-x^2) dx = \\sqrt{\\pi}'), padding=True, rounded=True, border=2),
+        G.Frame(G.Latex('\\sin^2(\\theta) + \\cos^2(\\theta) = 1'), padding=True, rounded=True, border=2),
         spacing=True,
     )
 

@@ -2,11 +2,13 @@
 
 import { stdout, stderr } from 'process'
 
-// importing @gum-jsx/math registers the latex elements and katex fonts with core,
-// so it must come before evaluateGum is used
-import '@gum-jsx/math'
-import { type ThemeName, type Size } from '@gum-jsx/core'
+// the math plugin goes onto the default Env, so evaluateGum knows the latex
+// elements and the katex fonts before any code is evaluated
+import { gum, type ThemeName, type Size } from '@gum-jsx/core'
+import { math } from '@gum-jsx/math'
 import { evaluateGum, ErrorNoCode, ErrorNoReturn, ErrorNoElement } from '@gum-jsx/core/eval'
+
+gum.use(math)
 import { rasterizeSvg, rasterizePixels, formatImage, formatPixels } from '@gum-jsx/node'
 
 type ErrorResult = { error: string; message: string; stack?: string }

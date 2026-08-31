@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@gum-jsx/core": "^1.7.0",
-    "@gum-jsx/math": "^1.7.0",
-    "@gum-jsx/node": "^1.7.0"
+    "@gum-jsx/core": "^1.8.0",
+    "@gum-jsx/math": "^1.8.0",
+    "@gum-jsx/node": "^1.8.0"
   },
   "devDependencies": {
     "@types/node": "^25.2.3",
